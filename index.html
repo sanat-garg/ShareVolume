@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Micro Devices</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="attachments.js"></script>
+</head>
+<body>
+    <h1 id="share-entity-name">Advanced Micro Devices</h1>
+    <div>
+        <h2>Max Shares Outstanding</h2>
+        <p>Value: <span id="share-max-value"></span></p>
+        <p>Fiscal Year: <span id="share-max-fy"></span></p>
+    </div>
+    <div>
+        <h2>Min Shares Outstanding</h2>
+        <p>Value: <span id="share-min-value"></span></p>
+        <p>Fiscal Year: <span id="share-min-fy"></span></p>
+    </div>
+    <script>
+        function fetchData(cik) {
+            fetch(`https://data.sec.gov/api/xbrl/companyconcept/${cik}/dei/EntityCommonStockSharesOutstanding.json`, {
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                const entityName = data.entityName;
+                const shares = data.units.shares.filter(entry => entry.fy > '2020' && !isNaN(entry.val));
+                const max = shares.reduce((prev, current) => (prev.val > current.val) ? prev : current);
+                const min = shares.reduce((prev, current) => (prev.val < current.val) ? prev : current);
+                document.title = entityName;
+                document.getElementById('share-entity-name').innerText = entityName;
+                document.getElementById('share-max-value').innerText = max.val;
+                document.getElementById('share-max-fy').innerText = max.fy;
+                document.getElementById('share-min-value').innerText = min.val;
+                document.getElementById('share-min-fy').innerText = min.fy;
+            });
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const cik = urlParams.get('CIK') || '0000002488';
+        fetchData(cik);
+    </script>
+</body>
+</html>
